@@ -1,0 +1,129 @@
+version: '3.8'
+
+services:
+  # Django Backend
+  backend:
+    build: .
+    container_name: inventory-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - DJANGO_ENV=production
+    volumes:
+      - ./logs:/app/logs
+      - staticfiles:/app/staticfiles
+      - mediafiles:/app/mediafiles
+    depends_on:
+      - db
+      - redis
+    networks:
+      - inventory-network
+    command: gunicorn --bind 0.0.0.0:8000 --workers 4 inventory_management.wsgi:application
+
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    container_name: inventory-db
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=${DB_NAME:-inventory_db}
+      - POSTGRES_USER=${DB_USER:-inventory_user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - inventory-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-inventory_user} -d ${DB_NAME:-inventory_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: inventory-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - inventory-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:alpine
+    container_name: inventory-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - staticfiles:/var/www/static
+      - mediafiles:/var/www/media
+      - ./frontend/build:/var/www/frontend:ro
+    depends_on:
+      - backend
+    networks:
+      - inventory-network
+
+  # Celery Worker
+  celery-worker:
+    build: .
+    container_name: inventory-celery-worker
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - DJANGO_ENV=production
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - inventory-network
+    command: celery -A inventory_management worker --loglevel=info
+
+  # Celery Beat (Scheduler)
+  celery-beat:
+    build: .
+    container_name: inventory-celery-beat
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - DJANGO_ENV=production
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - db
+      - redis
+    networks:
+      - inventory-network
+    command: celery -A inventory_management beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+
+volumes:
+  postgres_data:
+  redis_data:
+  staticfiles:
+  mediafiles:
+
+networks:
+  inventory-network:
+    driver: bridge

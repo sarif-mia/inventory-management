@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Django Backend (Development)
+  backend:
+    build: .
+    container_name: inventory-backend-dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - DJANGO_ENV=development
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - inventory-network
+    command: python manage.py runserver 0.0.0.0:8000
+
+  # PostgreSQL Database (Development)
+  db:
+    image: postgres:15-alpine
+    container_name: inventory-db-dev
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=${DB_NAME:-inventory_db}
+      - POSTGRES_USER=${DB_USER:-inventory_user}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - inventory-network
+
+  # Redis Cache (Development)
+  redis:
+    image: redis:7-alpine
+    container_name: inventory-redis-dev
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - inventory-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  inventory-network:
+    driver: bridge
