@@ -191,7 +191,15 @@ jobs:
         key: ${{ secrets.PRODUCTION_SSH_KEY }}
         script: |
           cd /opt/inventory-management-software
-          git pull origin main
+          git fetch origin
+          BRANCH="${{ github.ref_name }}"
+          if [ "$BRANCH" = "master" ]; then
+            git checkout master
+            git pull origin master
+          else
+            git checkout main
+            git pull origin main
+          fi
           make deploy
 
   notify:
