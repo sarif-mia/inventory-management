@@ -3,7 +3,6 @@ import {
   Box,
   Paper,
   Typography,
-  Grid,
   Button,
   CircularProgress,
   Alert,
@@ -16,6 +15,7 @@ import {
   Chip,
   LinearProgress,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import {
   BarChart,
   Bar,

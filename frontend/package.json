@@ -58,8 +58,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@types/react-swipeable-views": "^0.13.6"
   }
 }

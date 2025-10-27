@@ -4,7 +4,6 @@ import {
   Paper,
   Typography,
   Box,
-  Grid,
   Card,
   CardContent,
   Tab,
@@ -12,7 +11,8 @@ import {
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import SwipeableViews from 'react-swipeable-views';
+import Grid from '@mui/material/Grid2';
+// Removed react-swipeable-views to avoid ESM and missing dependency issues
 import PullToRefresh from '../PullToRefresh';
 import { useOffline } from '../../hooks/useOffline';
 import {
@@ -241,40 +241,39 @@ const MobileDashboard: React.FC = () => {
       </Paper>
 
       <Box {...bind()}>
-        <SwipeableViews
-          index={tabValue}
-          onChangeIndex={setTabValue}
-          enableMouseEvents
-          style={{ overflow: 'hidden' }}
-        >
-          <TabPanel value={tabValue} index={0}>
-            <Typography variant="h6" gutterBottom>
-              Quick Overview
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Welcome to your inventory management dashboard. Swipe left or right to navigate between different views.
-            </Typography>
-            {metrics && <MetricsCards metrics={metrics} />}
-          </TabPanel>
-
-          <TabPanel value={tabValue} index={1}>
-            <Typography variant="h6" gutterBottom>
-              Analytics
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Detailed analytics and insights will be displayed here.
-            </Typography>
-          </TabPanel>
-
-          <TabPanel value={tabValue} index={2}>
-            <Typography variant="h6" gutterBottom>
-              Alerts & Notifications
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Important alerts and notifications will appear here.
-            </Typography>
-          </TabPanel>
-        </SwipeableViews>
+        <Box sx={{ overflow: 'hidden' }}>
+          {tabValue === 0 && (
+            <TabPanel value={tabValue} index={0}>
+              <Typography variant="h6" gutterBottom>
+                Quick Overview
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Welcome to your inventory management dashboard. Swipe left or right to navigate between different views.
+              </Typography>
+              {metrics && <MetricsCards metrics={metrics} />}
+            </TabPanel>
+          )}
+          {tabValue === 1 && (
+            <TabPanel value={tabValue} index={1}>
+              <Typography variant="h6" gutterBottom>
+                Analytics
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Detailed analytics and insights will be displayed here.
+              </Typography>
+            </TabPanel>
+          )}
+          {tabValue === 2 && (
+            <TabPanel value={tabValue} index={2}>
+              <Typography variant="h6" gutterBottom>
+                Alerts & Notifications
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Important alerts and notifications will appear here.
+              </Typography>
+            </TabPanel>
+          )}
+        </Box>
       </Box>
     </Container>
     </PullToRefresh>

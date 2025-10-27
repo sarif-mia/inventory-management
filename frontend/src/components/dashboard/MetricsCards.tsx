@@ -4,8 +4,8 @@ import {
   CardContent,
   Typography,
   Box,
-  Grid,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import {
   ShoppingCart,
   AttachMoney,

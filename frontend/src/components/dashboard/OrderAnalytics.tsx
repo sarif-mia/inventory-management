@@ -3,7 +3,6 @@ import {
   Box,
   Paper,
   Typography,
-  Grid,
   Button,
   CircularProgress,
   Alert,
@@ -15,6 +14,7 @@ import {
   TableRow,
   Chip,
 } from '@mui/material';
+import Grid from '@mui/material/Grid2';
 import {
   PieChart,
   Pie,
